@@ -17,7 +17,7 @@ module.exports = function(defaults) {
   app.import('bower_components/moment/moment.js');
 
   app.import('bower_components/blueimp-md5/js/md5.js');
-  app.import('vendor/markdown/markdown.js');
-  
+  // app.import('vendor/markdown/markdown.js');
+
   return app.toTree();
 };

@@ -37,8 +37,10 @@ var uniq = function (arr) {
  * otherwise.
  */
 export default DS.Adapter.extend(Waitable, {
-  wildember: Ember.inject.service(),
+  // wildember: Ember.inject.service(),
   defaultSerializer: '-wildember',
+  // 连接野狗配置信息
+  wilddogConfig: null,
 
 
   /**
@@ -46,9 +48,12 @@ export default DS.Adapter.extend(Waitable, {
    * adapter:
    *
    * ```js
-   * DS.WildemberAdapter.extend({
-   *   firebase: new Firebase('https://<my-firebase>.firebaseio.com/')
-   * });
+   * export default WildemberAdapter.extend({
+   *     wilddogConfig: {
+   *          syncDomain: "ddlisting.wilddog.com",
+   *          syncURL: "https://ddlisting.wilddogio.com" //输入节点 URL
+   *     }
+   *  });
    * ```
    *
    * Requests for `App.Post` now target `https://<my-firebase>.firebaseio.com/posts`.
@@ -57,10 +62,19 @@ export default DS.Adapter.extend(Waitable, {
    * @type {Firebase}
    * @constructor
    */
-  init() {
+  init(application) {
     this._super.apply(this, arguments);
-
-    var ref = this.get('wildember');
+    let wilddogConfig = this.get('wilddogConfig');
+    if (!wilddogConfig) {
+        throw new Error('请在适配器`application`中设置属性`wilddogConfig`！');
+    }
+    // var ref = this.get('wildember').getWilddogRef(application);
+    // 获取野狗连接
+    wilddog.initializeApp(wilddogConfig);
+    let ref = wilddog.sync().ref();
+    // if (!wd) {
+    //     throw new Error('连接`widdog`失败！');
+    // }
     if (!ref) {
       throw new Error('Please set the `wildember` property in the environment config.');
     }
