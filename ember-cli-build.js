@@ -13,10 +13,13 @@ module.exports = function(defaults) {
     This build file does *not* influence how the addon or the app using it
     behave. You most likely want to be modifying `./index.js` or app's build file
   */
-  app.import('bower_components/normalize-css/normalize.css');
-  app.import('bower_components/moment/moment.js');
+    // app.import('bower_components/Faker.js');
 
-  app.import('bower_components/blueimp-md5/js/md5.js');
+  // app.import('bower_components/normalize-css/normalize.css');
+  // app.import('bower_components/moment/moment.js');
+
+  //
+  // app.import('bower_components/blueimp-md5/js/md5.js');
   // app.import('vendor/markdown/markdown.js');
 
   return app.toTree();

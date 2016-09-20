@@ -28,7 +28,8 @@
     "package.json"
   ],
   "dependencies": {
-    "wilddog": "0.7.2"
+    "wilddog": "0.7.2",
+    "Faker": "^3.1.0"
   },
   "devDependencies": {
     "ember": "2.5.1",
