@@ -1,1 +1,1 @@
-export { default } from 'wild-ember/adapters/wildember';
+export { default } from 'wildember/adapters/wildember';

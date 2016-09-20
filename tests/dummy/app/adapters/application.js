@@ -1,5 +1,5 @@
 import DS from 'ember-data';
-import WildemberAdapter from 'wild-ember/adapters/wildember';
+import WildemberAdapter from 'wildember/adapters/wildember';
 
 export default WildemberAdapter.extend({
     wilddogConfig: {

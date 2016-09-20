@@ -1,1 +1,1 @@
-export { default, initialize } from 'wild-ember/initializers/application';
+export { default, initialize } from 'wildember/initializers/application';

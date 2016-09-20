@@ -1,4 +1,4 @@
-import WildemberAdapter from 'WildEmber/adapters/wildember';
+import WildemberAdapter from 'wildember/adapters/wildember';
 
 export default WildemberAdapter.extend({
 });

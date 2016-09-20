@@ -1,9 +1,9 @@
 {
-  "name": "emberfire",
-  "description": "The officially supported Ember binding for Firebase",
-  "version": "0.0.0",
+  "name": "wildember",
+  "description": "一个方便、快捷连接野狗实时服务适配器。",
+  "version": "0.2.0",
   "author": "ubuntuvim (https://github.com/ubuntuvim/)",
-  "homepage": "https://github.com/ubuntuvim/WildEmber",
+  "homepage": "https://github.com/ubuntuvim/wildember",
   "directories": {
     "doc": "doc",
     "test": "tests"
@@ -16,10 +16,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ubuntuvim/WildEmber.git"
+    "url": "https://github.com/ubuntuvim/wildember.git"
   },
   "bugs": {
-    "url": "https://github.com/ubuntuvim/WildEmberissues"
+    "url": "https://github.com/ubuntuvim/wildember/issues"
   },
   "license": "MIT",
   "keywords": [
@@ -89,6 +89,7 @@
     "sinon": "^1.17.3",
     "torii": "0.8.0",
     "vinyl-buffer": "1.0.0",
-    "vinyl-source-stream": "1.1.0"
+    "vinyl-source-stream": "1.1.0",
+    "wilddog": "2.0.4"
   }
 }

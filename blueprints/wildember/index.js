@@ -16,7 +16,6 @@ module.exports = {
   ],
 
   afterInstall: function(options) {
-    var wilddogUrl = options.url || 'https://YOUR-FIREBASE-NAME.wilddogio.com/';
 
     var bowerDeps = [
       {
@@ -33,37 +32,27 @@ module.exports = {
       var r = chalk.red;
       var out = EOL;
 
-      out += y('WildEmber') + ' installed.' + EOL +
+      out += y('wildember') + ' installed.' + EOL +
           EOL +
           r('CONFIGURATION REQUIRED') + EOL +
           EOL +
-          'Please update ' + b('config/environment.js') +
-          ' with your firebase settings. You can find these at ' +
-          'https://console.firebase.google.com/ by clicking the ' +
-          m('[Add Firebase to your web app]') + ' button on the project overview panel.' +
+          '请参考：https://github.com/ubuntuvim/WildEmber进行配置使用，或者参考下面的配置。' +
           EOL + EOL;
 
 
-      out += "Example:" + EOL +
+      out += "配置示例:" + EOL +
           EOL +
-          g("// config/environment.js") + EOL +
-          "var ENV = {" + EOL +
-          "  locationType: 'auto'," + EOL +
-          g("  // ...") + EOL +
-          "  firebase: {" + EOL +
-          "    apiKey: 'xyz'," + EOL +
-          "    authDomain: 'YOUR-FIREBASE-APP.firebaseapp.com'," + EOL +
-          "    databaseURL: 'https://YOUR-FIREBASE-APP.firebaseapp.com'," + EOL +
-          "    storageBucket: 'YOUR-FIREBASE-APP.appspot.com'," + EOL +
-          "  }," + EOL +
-          EOL +
-          EOL +
-          g("  // if using ember-cli-content-security-policy") + EOL +
-          "  contentSecurityPolicy: {" + EOL +
-          "    'script-src': '\'self\' \'unsafe-eval\' apis.google.com'," + EOL +
-          "    'frame-src': '\'self\' https://*.firebaseapp.com'," + EOL +
-          "    'connect-src': '\'self\' wss://*.firebaseio.com https://*.googleapis.com'" + EOL +
-          "  }," + EOL +
+          g("// app/adapters/application.js") + EOL +
+          "" + EOL +
+          "import DS from 'ember-data';" + EOL +
+          "import WildemberAdapter from 'wild-ember/adapters/wildember';" + EOL +
+          "" + EOL +
+          "export default WildemberAdapter.extend({" + EOL +
+          "    wilddogConfig: {" + EOL +
+          "        syncDomain: 'wildember.wilddog.com'," + EOL +
+          "        syncURL: 'https://wildember.wilddogio.com'" + EOL +
+          "    }" + EOL +
+          "});" + EOL +
           EOL;
 
       this.ui.writeLine(out);

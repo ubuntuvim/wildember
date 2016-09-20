@@ -2,5 +2,5 @@
 'use strict';
 
 module.exports = {
-  name: 'wild-ember'
+  name: 'wildember'
 };
