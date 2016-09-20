@@ -2,7 +2,6 @@ import Ember from 'ember';
 import DS from 'ember-data';
 import Waitable from '../mixins/waitable';
 import toPromise from '../utils/to-promise';
-
 import forEach from 'lodash/collection/forEach';
 import filter from 'lodash/collection/filter';
 import map from 'lodash/collection/map';
@@ -64,6 +63,7 @@ export default DS.Adapter.extend(Waitable, {
    */
   init(application) {
     this._super.apply(this, arguments);
+    // wilddogConfig会在子类中被赋值
     let wilddogConfig = this.get('wilddogConfig');
     if (!wilddogConfig) {
         throw new Error('请在适配器`application`中设置属性`wilddogConfig`！');
@@ -72,9 +72,6 @@ export default DS.Adapter.extend(Waitable, {
     // 获取野狗连接
     wilddog.initializeApp(wilddogConfig);
     let ref = wilddog.sync().ref();
-    // if (!wd) {
-    //     throw new Error('连接`widdog`失败！');
-    // }
     if (!ref) {
       throw new Error('Please set the `wildember` property in the environment config.');
     }
@@ -581,10 +578,31 @@ export default DS.Adapter.extend(Waitable, {
    * @return {Boolean}              Is the relationship embedded?
    */
   isRelationshipEmbedded(store, modelName, relationship) {
-    var serializer = store.serializerFor(modelName);
-    return serializer.hasDeserializeRecordsOption(relationship.key);
+    // var serializer = store.serializerFor(modelName);
+    // return serializer.hasDeserializeRecordsOption(relationship.key);
+    return this.hasDeserializeRecordsOption(relationship.key);
   },
 
+  // checks config for attrs option to deserialize records
+  // a defined option object for a resource is treated the same as
+  // `deserialize: 'records'`
+  // 注意：从ember-data2.8版本开始没有这个方法！
+  hasDeserializeRecordsOption(attr) {
+    var alwaysEmbed = this.hasEmbeddedAlwaysOption(attr);
+    var option = this.attrsOption(attr);
+    return alwaysEmbed || (option && option.deserialize === 'records');
+  },
+
+  // checks config for attrs option to embedded (always) - serialize and deserialize
+  hasEmbeddedAlwaysOption(attr) {
+    var option = this.attrsOption(attr);
+    return option && option.embedded === 'always';
+  },
+
+  attrsOption(attr) {
+    var attrs = this.get('attrs');
+    return attrs && (attrs[camelize(attr)] || attrs[attr]);
+  },
 
   /**
    * Determine from if the record is embedded via implicit relationships.

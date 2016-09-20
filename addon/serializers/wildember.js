@@ -142,6 +142,23 @@ export default DS.JSONSerializer.extend(DS.EmbeddedRecordsMixin, {
     });
   },
 
+    // checks config for attrs option to deserialize records
+    // a defined option object for a resource is treated the same as
+    // `deserialize: 'records'`
+    hasDeserializeRecordsOption(attrs, attr) {
+        var alwaysEmbed = hasEmbeddedAlwaysOption(attrs, attr);
+        var option = attrsOption(attrs, attr);
+        var hasSerializingOption = option && (option.deserialize || option.serialize);
+        return alwaysEmbed || hasSerializingOption /* option.deserialize === 'records' */;
+    },
+    // checks config for attrs option to embedded (always) - serialize and deserialize
+    hasEmbeddedAlwaysOption(attrs, attr) {
+        var option = attrsOption(attrs, attr);
+        return option && option.embedded === 'always';
+    },
+    attrsOption(attrs, attr) {
+        return attrs && (attrs[Ember.String.camelize(attr)] || attrs[attr]);
+    },
 
   /**
    * Coerce arrays back into relationship arrays. When numeric ids are used
