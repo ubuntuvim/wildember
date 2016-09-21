@@ -37,7 +37,7 @@ wildember是一个方便、快捷连接野狗实时服务适配器。
 
 详细例子请参考：[library-app的index.html](https://github.com/ubuntuvim/wildember/blob/master/tests/dummy/app/index.html)
 
-* 配置野狗后台
+* **配置野狗后台**
 
 安装并配置完毕之后我们还需要在野狗的服务后台设置域名的白名单。
 

@@ -28,7 +28,7 @@
     "package.json"
   ],
   "dependencies": {
-    "wilddog": "2.0.4",
+    "wilddog": "0.7.2",
     "Faker": "^3.1.0"
   },
   "devDependencies": {
