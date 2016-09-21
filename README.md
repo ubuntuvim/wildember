@@ -37,7 +37,28 @@ wildember是一个方便、快捷连接野狗实时服务适配器。
 
 详细例子请参考：[library-app的index.html](https://github.com/ubuntuvim/wildember/blob/master/tests/dummy/app/index.html)
 
+* 配置野狗后台
+
+安装并配置完毕之后我们还需要在野狗的服务后台设置域名的白名单。
+
+1. 进入你的应用管理后台，地址[https://www.wilddog.com/dashboard/](https://www.wilddog.com/dashboard/)。
+2. 点击你的应用进入详细设置页面
+3. 选择左侧是“安全”，然后输入的你的域名，请看下图所示位置，如果你不配置白名单访问的时候会提示你无权访问数据
+4. 经过前面的设置还是提示无权访问还需要在“实时数据同步”中设置读写权限，在修改规则表达式为：
+
+```
+{
+  "rules": {
+    ".read": true,
+    ".write": true
+  }
+}
+```
+
+![设置白名单](http://emberteach.ddlisting.com/content/images/2016/09/wilddog2.png)
+
 配置完成之后请重启的你的APP。
+
 
 ## 使用wildember的完整示例。
 
