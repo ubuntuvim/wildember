@@ -8,8 +8,8 @@ wildember是一个方便、快捷连接野狗实时服务适配器。
 
 
 野狗和firebase都是实时的数据服务，但是遗憾的是firebase是谷歌的，你懂的在天朝想访问都是比较那个啥的！！！
-所以找了国内的替代品——野狗。当然不是时候野狗不好，如果你使用过这两个服务就会发现其实野狗就是firebase（说难听其实就是直接抄firebase的，连API、调用方法都一样！！）。
-也正是因为firebase无法访问所以我们为Ember.js的开发提供了连接野狗的适配器wildemer。它的使用方式和firebase一模一样，因为WildEmber是直接fork Emberfire的（说难听点其实也是抄Emberfire的！！）。
+所以找了国内的替代品——野狗。当然不是时候野狗不好，如果你使用过这两个服务就会发现其实野狗就是firebase（野狗大部分的设计应该都是参考firebase的）。
+也正是因为firebase无法访问所以我们为Ember.js的开发提供了连接野狗的适配器wildemer。它的使用方式和firebase一模一样，因为WildEmber是直接fork Emberfire的（说难听点其实是抄Emberfire的！！）。
 
 
 ## 安装wildember
@@ -26,6 +26,8 @@ wildember是一个方便、快捷连接野狗实时服务适配器。
 代码中的`<appId>`是你在野狗创建的应用id。可以在[https://www.wilddog.com/dashboard/](https://www.wilddog.com/dashboard/)，如下图所示：
 
 ![appid](http://emberteach.ddlisting.com/content/images/2016/09/wilddog.png)
+
+如果图片无法显示，请直接点击链接查看图片。[图片链接](http://emberteach.ddlisting.com/content/images/2016/09/wilddog.png)
 
 红色圈中的部分就是你的应用appid。详细例子请参考：[library-app的adapters/application.js](https://github.com/ubuntuvim/wildember/blob/master/tests/dummy/app/adapters/application.js)
 
@@ -56,6 +58,8 @@ wildember是一个方便、快捷连接野狗实时服务适配器。
 ```
 
 ![设置白名单](http://emberteach.ddlisting.com/content/images/2016/09/wilddog2.png)
+
+如果图片无法显示，请直接点击链接查看图片。[图片链接2](http://emberteach.ddlisting.com/content/images/2016/09/wilddog2.png)
 
 配置完成之后请重启的你的APP。
 
