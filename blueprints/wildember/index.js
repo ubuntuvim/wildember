@@ -12,7 +12,7 @@ module.exports = {
   },
 
   afterInstall: function() {
-      return this.addBowerPackageToProject('wildember'); // is a promise
+      return this.addBowerPackagesToProject('wildember'); // is a promise
   }
 
   // availableOptions: [

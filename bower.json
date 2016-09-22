@@ -1,32 +1,5 @@
 {
   "name": "wildember",
-  "description": "一个方便、快捷连接野狗实时服务适配器。",
-  "version": "1.5.4",
-  "author": "ubuntuvim (https://github.com/ubuntuvim/)",
-  "homepage": "https://github.com/ubuntuvim/wildember",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/ubuntuvim/wildember.git"
-  },
-  "license": "MIT",
-  "keywords": [
-    "ember",
-    "wilddog",
-    "realtime",
-    "ember-addon"
-  ],
-  "main": "index.js",
-  "ignore": [
-    "**/.*",
-    "tests",
-    "vendor",
-    "node_modules",
-    "bower_components",
-    "build.sh",
-    "changelog.txt",
-    "Brocfile.js",
-    "package.json"
-  ],
   "dependencies": {
     "wilddog": "0.7.2",
     "Faker": "^3.1.0"
