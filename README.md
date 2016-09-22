@@ -14,7 +14,7 @@ wildember是一个方便、快捷连接野狗实时服务适配器。
 
 ## 安装wildember
 
-* 使用命令安装：`npm install wildember`
+* 使用命令安装：`ember install wildember`
 * 修改`app/adapters/application.js`
     在文件内增加如下代码：
     ```js
