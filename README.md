@@ -14,15 +14,21 @@ wildember是一个方便、快捷连接野狗实时服务适配器。
 
 ## 安装wildember
 
-* 使用命令安装：`ember install wildember`
-* 修改`app/adapters/application.js`
-    在文件内增加如下代码：
-    ```js
+* 使用命令安装：`ember install wildember`。
+* 修改`app/adapters/application.js`，如果没有自动创建这个文件请手动创建，或者使用命令`ember g adapter application`创建。
+在文件内增加如下代码：
+
+```js
+import WildemberAdapter from 'wildember/adapters/wildember';
+
+export default WildemberAdapter.extend({
     wilddogConfig: {
         syncDomain: "<appId>.wilddog.com",
         syncURL: "https://<appId>.wilddogio.com" //输入节点 URL
     }
-    ```
+});
+```
+
 代码中的`<appId>`是你在野狗创建的应用id。可以在[https://www.wilddog.com/dashboard/](https://www.wilddog.com/dashboard/)，如下图所示：
 
 ![appid](http://emberteach.ddlisting.com/content/images/2016/09/wilddog.png)
