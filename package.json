@@ -1,9 +1,9 @@
 {
   "name": "wildember",
   "description": "一个方便、快捷连接野狗实时服务适配器。",
-  "version": "1.3.0",
+  "version": "1.5.4",
   "author": "ubuntuvim (https://github.com/ubuntuvim/)",
-  "homepage": "https://github.com/ubuntuvim/wildember",
+  "homepage": "https://wildember.ddlisting.com",
   "directories": {
     "doc": "doc",
     "test": "tests"
