@@ -57,9 +57,9 @@ wildember是一个方便、快捷连接野狗实时服务适配器。
 }
 ```
 
-![设置白名单](http://emberteach.ddlisting.com/content/images/2016/09/wilddog2.png)
+![设置白名单](http://emberteach.ddlisting.com/content/images/2016/09/wildember2.png)
 
-如果图片无法显示，请直接点击链接查看图片。[图片链接2](http://emberteach.ddlisting.com/content/images/2016/09/wilddog2.png)
+如果图片无法显示，请直接点击链接查看图片。[图片链接2](http://emberteach.ddlisting.com/content/images/2016/09/wildember2.png)
 
 配置完成之后请重启的你的APP。
 
