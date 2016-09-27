@@ -25,41 +25,31 @@ var uniq = function (arr) {
 
 
 /**
- * The Firebase adapter allows your store to communicate with the Firebase
- * realtime service. To use the adapter in your app, extend DS.WildemberAdapter
- * and customize the endpoint to point to the Firebase URL where you want this
- * data to be stored.
+ * wildember，这是一个连接野狗实时服务的适配器，开发者只需要继承类`WildemberAdapter`,
+ * 并在适配器中设置对象`wilddogConfig`，此对象是用于连接野狗的URL。比如下面的代码
  *
- * The adapter will automatically communicate with Firebase to persist your
- * records as neccessary. Importantly, the adapter will also update the store
- * in realtime when changes are made to the Firebase by other clients or
- * otherwise.
+ * ```js
+ * export default WildemberAdapter.extend({
+ *     wilddogConfig: {
+ *          //  注意appId是注册野狗后自己的项目的项目名,
+ *          //  可以在：https://www.wilddog.com/dashboard/查看
+ *          syncDomain: "appId.wilddog.com",
+ *          syncURL: "https://appId.wilddogio.com"
+ *     }
+ *  });
+ * ```
+ * 适配器会自动连接野狗实时服务，并且在适当时候（执行save、update操作）持久化数据；
+ * 另一方面，适配器还会实时监测野狗数据库数据的变化，并且实时更新Ember.js项目中关联的属性值。
  */
 export default DS.Adapter.extend(Waitable, {
-  // wildember: Ember.inject.service(),
+  //
   defaultSerializer: '-wildember',
   // 连接野狗配置信息
   wilddogConfig: null,
 
 
   /**
-   * Endpoint paths can be customized by setting the Firebase property on the
-   * adapter:
-   *
-   * ```js
-   * export default WildemberAdapter.extend({
-   *     wilddogConfig: {
-   *          syncDomain: "ddlisting.wilddog.com",
-   *          syncURL: "https://ddlisting.wilddogio.com" //输入节点 URL
-   *     }
-   *  });
-   * ```
-   *
-   * Requests for `App.Post` now target `https://<my-firebase>.firebaseio.com/posts`.
-   *
-   * @property firebase
-   * @type {Firebase}
-   * @constructor
+   * 初始化，并获取野狗的连接
    */
   init(application) {
     this._super.apply(this, arguments);
@@ -73,7 +63,7 @@ export default DS.Adapter.extend(Waitable, {
     wilddog.initializeApp(wilddogConfig);
     let ref = wilddog.sync().ref();
     if (!ref) {
-      throw new Error('Please set the `wildember` property in the environment config.');
+      throw new Error('连接wilddog失败。');
     }
     // If provided wilddog reference was a query (eg: limits), make it a ref.
     this._ref = ref;
@@ -88,9 +78,9 @@ export default DS.Adapter.extend(Waitable, {
 
 
   /**
-   * Uses push() to generate chronologically ordered unique IDs.
-   *
-   * @return {String}
+   * 调用push()方法得到一个按时间排序的唯一ID，ID格式：-KSbIkOwC91KABpN1pbi
+   * push: https://docs.wilddog.com/api/sync/web/api.html#push
+   * @return {String} 唯一id值
    */
   generateIdForRecord() {
     return this._getKey(this._ref.push());
@@ -98,9 +88,9 @@ export default DS.Adapter.extend(Waitable, {
 
 
   /**
-   * Use the Firebase DataSnapshot's key as the record id
+   * Use the Wilddog DataSnapshot's key as the record id
    *
-   * @param {Object} snapshot - A Firebase snapshot
+   * @param {Object} snapshot - A Wilddog snapshot
    * @param {Object} payload - The payload that will be pushed into the store
    * @return {Object} payload
    */
@@ -114,12 +104,10 @@ export default DS.Adapter.extend(Waitable, {
 
 
   /**
-   * Called by the store to retrieve the JSON for a given type and ID. The
-   * method will return a promise which will resolve when the value is
-   * successfully fetched from Firebase.
+   * store调用此方法时候回根据id查询`typeClass`的数据。
+   * 此方法返回的是一个promises，当promises执行成功的时候可以wilddog获取到数据。
    *
-   * Additionally, from this point on, the object's value in the store will
-   * also be automatically updated whenever the remote value changes.
+   * 此外，当wilddog后端数据库的数据有变化时候此方法会自动更新（ember项目的属性自动更新）
    */
   findRecord(store, typeClass, id) {
     var ref = this._getCollectionRef(typeClass, id);
@@ -127,7 +115,9 @@ export default DS.Adapter.extend(Waitable, {
     var log = `DS: WildemberAdapter#findRecord ${typeClass.modelName} to ${ref.toString()}`;
 
     return this._fetch(ref, log).then((snapshot) => {
+      // 得到从wilddog返回的数据
       var payload = this._assignIdToPayload(snapshot);
+      //缓存一下得到的数据
       this._updateRecordCacheForType(typeClass, payload, store);
       if (payload === null) {
         var error = new Error(`no record was found at ${ref.toString()}`);
@@ -143,7 +133,7 @@ export default DS.Adapter.extend(Waitable, {
   /**
    * Promise interface for once('value') that also handle test waiters.
    *
-   * @param  {Firebase} ref
+   * @param  {Wilddog} ref
    * @param  {String} log
    * @return {Promise<DataSnapshot>}
    * @private
@@ -164,6 +154,25 @@ export default DS.Adapter.extend(Waitable, {
     }, log);
   },
 
+  // TODO: 分页查询
+  _fetchPagation(ref, log) {
+    this._incrementWaiters();
+    return new Promise((resolve, reject) => {
+
+      ref.orderByPriority()
+        .startAt(1) //
+        .endAt(10)
+        .once('value', (snapshot) => {
+        this._decrementWaiters();
+        Ember.run(null, resolve, snapshot);
+
+      }, (err) => {
+        this._decrementWaiters();
+        Ember.run(null, reject, err);
+      });
+
+    }, log);
+  },
 
   recordWasPushed(store, modelName, record) {
     if (!record.__listening) {
@@ -226,10 +235,10 @@ export default DS.Adapter.extend(Waitable, {
   /**
    * Called by the store to retrieve the JSON for all of the records for a
    * given type. The method will return a promise which will resolve when the
-   * value is successfully fetched from Firebase.
+   * value is successfully fetched from Wilddog.
    *
    * Additionally, from this point on, any records of this type that are added,
-   * removed or modified from Firebase will automatically be reflected in the
+   * removed or modified from Wilddog will automatically be reflected in the
    * store.
    */
   findAll(store, typeClass) {
@@ -237,7 +246,7 @@ export default DS.Adapter.extend(Waitable, {
 
     var log = `DS: WildemberAdapter#findAll ${typeClass.modelName} to ${ref.toString()}`;
 
-    return this._fetch(ref, log).then((snapshot) => {
+    return this._fetchPagation(ref, log).then((snapshot) => {
       if (!this._findAllHasEventsForType(typeClass)) {
         this._findAllAddEventListeners(store, typeClass, ref);
       }
@@ -413,9 +422,9 @@ export default DS.Adapter.extend(Waitable, {
    * method on a model record instance.
    *
    * The `updateRecord` method serializes the record and performs an `update()`
-   * at the the Firebase location and a `.set()` at any relationship locations
+   * at the the Wilddog location and a `.set()` at any relationship locations
    * The method will return a promise which will be resolved when the data and
-   * any relationships have been successfully saved to Firebase.
+   * any relationships have been successfully saved to Wilddog.
    *
    * We take an optional record reference, in order for this method to be usable
    * for saving nested records as well.
@@ -488,7 +497,7 @@ export default DS.Adapter.extend(Waitable, {
 
   /**
    * Update a single record without caring for the relationships
-   * @param  {Firebase} recordRef
+   * @param  {Wilddog} recordRef
    * @param  {Object} serializedRecord
    * @return {Promise}
    */
@@ -664,7 +673,7 @@ export default DS.Adapter.extend(Waitable, {
 
 
   /**
-   * Return a Firebase reference for a given modelName and optional ID.
+   * Return a Wilddog reference for a given modelName and optional ID.
    */
   _getCollectionRef(typeClass, id) {
     var ref = this._ref;
@@ -679,10 +688,10 @@ export default DS.Adapter.extend(Waitable, {
 
 
   /**
-   * Returns a Firebase reference for a record taking into account if the record is embedded
+   * Returns a Wilddog reference for a record taking into account if the record is embedded
    *
    * @param  {DS.Model} record
-   * @return {Firebase}
+   * @return {Wilddog}
    */
   _getAbsoluteRef(record) {
     if (record._internalModel) {
@@ -735,7 +744,7 @@ export default DS.Adapter.extend(Waitable, {
 
 
   /**
-   * Return a Firebase reference based on a relationship key and record id
+   * Return a Wilddog reference based on a relationship key and record id
    */
   _getRelationshipRef(ref, key, id) {
     return ref.child(key).child(id);
@@ -812,7 +821,7 @@ export default DS.Adapter.extend(Waitable, {
 
 
   /**
-   * Get or create the cache for a record
+   * 缓存record，如果record不在缓存中则创建一个新的缓存record
    */
   _getRecordCache(typeClass, id) {
     var modelName = typeClass.modelName;
@@ -824,11 +833,8 @@ export default DS.Adapter.extend(Waitable, {
 
 
   /**
-   * A utility for retrieving the key name of a Firebase ref or
-   * DataSnapshot. This is backwards-compatible with `name()`
-   * from Firebase 1.x.x and `key()` from Firebase 2.0.0+. Once
-   * support for Firebase 1.x.x is dropped in EmberFire, this
-   * helper can be removed.
+   * 获得当前路径下节点的名称。
+   * key() :https://docs.wilddog.com/api/sync/web/api.html#key
    */
   _getKey(refOrSnapshot) {
     var key;
