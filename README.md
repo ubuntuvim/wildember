@@ -76,6 +76,122 @@ export default WildemberAdapter.extend({
 
 或者请直接预览：[http://wildember.ddlisting.com/](http://wildember.ddlisting.com/)
 
+## 分页设置
+
+由于是实时数据服务，分页设置并不好处理，参考野狗官方给的[分页实例](https://coding.net/u/wilddog/p/wilddog-gist-js/git/tree/master/src/pagination#user-content-yi-kao-shang--ye-de-zui-hou--tiao-ji-lu-huo-qu-xia--ye-shu-ju)，再整合到wildember中。目前实现的分页还只能点击“下一页”实现，还不能直接实现输入页码、直接跳转到某一页功能，这个主要是受限于野狗提供API。**此分页非常适用于滚动式分页。**
+
+### 如何分页
+
+分页效果请看[http://localhost:4200/user](http://localhost:4200/user)、[http://localhost:4200/pagination](http://localhost:4200/pagination)，具体实现代码请看下面的例子（以其中的pagination为例子）：
+
+#### 一、设置序列化器（JSONSerializer）
+
+使用命令`ember g serialize application`创建一个处理数据的`JSONSerializer`，默认可能创建的可能是`JSONAPISerializer`，需要修改。
+你可以直接复制下面的代码到你的JSONSerializer中。
+
+```js
+// app/serializers/application.js
+
+import JSONSerializer from 'ember-data/serializers/json';
+
+/**
+ * 子类重写normalizeResponse方法，实现野狗的分页
+ * @type {[type]}
+ */
+export default JSONSerializer.extend({
+
+      /**
+       * 分页处理
+       */
+      normalizeResponse(store, primaryModelClass, payload, id, requestType) {
+          //分页
+          if (store.get('typeMaps')
+              && typeof(store.get('typeMaps').metadata) !== 'undefined'
+              && store.get('typeMaps').metadata.isPagination) {
+              //   Ember.Logger.debug("JSONSerializer.normalizeResponse：分页处理。");
+              // 获取最后一个元素的位置
+              let len = payload.length-1;
+              let lsId = payload[len].id;
+              // 野狗分页设置：https://coding.net/u/wilddog/p/wilddog-gist-js/git/tree/master/src/pagination#user-content-yi-kao-shang--ye-de-zui-hou--tiao-ji-lu-huo-qu-xia--ye-shu-ju
+              //记录下一页开始记录id
+              store.set("startAtId", lsId);
+              //删除最后一个元素;
+              payload.pop();
+          }
+          return this._super(...arguments);
+      }
+})
+```
+
+### 二、查询数据
+
+查询数据与图片查询一直，唯一不同的是要在查询之前设置一个分页标识`isPagination`。请看下面组件类中查询数据的方法。
+
+```js
+// app/components/pagination-test.js
+import Ember from 'ember';
+
+export default Ember.Component.extend({
+
+    startAt: null,
+    list: Ember.computed('startAt', function() {
+        let store = this.get("store");
+        //设置分页标记
+        store.set('typeMaps.metadata', { 'isPagination':true } );
+        return store.query('todo-item', {
+            startAt: store.get('startAtId'), //this.get("startAt"),
+            orderByChild: 'timestamp',
+            limitToFirst: 2  //每页显示的条数
+        });
+    }),
+    actions: {
+        nextPage() {
+            // 设置下一页开始的位置
+            // let lastEleId = this.get("store").get('startAtId');
+            this.set('startAt', this.get("store").get('startAtId'));
+        }
+    }
+
+});
+```
+注意：`store.set('typeMaps.metadata', { 'isPagination':true } );`这一行代码的设置，如果没有设置一个属性将导致无法分页，结果只是查询出2条数据并且点击下一页也是无效的。
+
+### 分页展示页面
+
+```hbs
+{{! app/templates/pagination.hbs }}
+{{pagination-test store=store model=model}}
+```
+
+```hbs
+{{! app/templates/components/pagination-test.hbs }}
+<button type="button" {{action 'nextPage'}}>下一页</button>
+<table class="table">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>First Name</th>
+      <th>Last Name</th>
+      <th>Username</th>
+    </tr>
+  </thead>
+  <tbody>
+      {{#each list as |item index|}}
+    <tr>
+      <td>{{index}}</td>
+      <td>{{item.id}}</td>
+      <td>{{item.timestamp}}</td>
+      <td>{{item.title}}</td>
+    </tr>
+    {{/each}}
+  </tbody>
+</table>
+```
+
+### 说明
+
+目前只实现了`query`方法的分页，对于`findAll`、`findRecord`就没必要做分页了。
+
 ## 问题
 
 如果使用过程发现问题请报告给我，或者直接提[issues](https://github.com/ubuntuvim/wildember/issues)。
