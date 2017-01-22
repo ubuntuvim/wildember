@@ -131,7 +131,7 @@ export default DS.Adapter.extend(Waitable, {
 
 
   /**
-   * Promise interface for once('value') that also handle test waiters.
+   * 获取数据并返回promises
    *
    * @param  {Wilddog} ref
    * @param  {String} log
@@ -143,26 +143,6 @@ export default DS.Adapter.extend(Waitable, {
     return new Promise((resolve, reject) => {
 
       ref.once('value', (snapshot) => {
-        this._decrementWaiters();
-        Ember.run(null, resolve, snapshot);
-
-      }, (err) => {
-        this._decrementWaiters();
-        Ember.run(null, reject, err);
-      });
-
-    }, log);
-  },
-
-  // TODO: 分页查询
-  _fetchPagation(ref, log) {
-    this._incrementWaiters();
-    return new Promise((resolve, reject) => {
-
-      ref.orderByPriority()
-        .startAt(1) //
-        .endAt(10)
-        .once('value', (snapshot) => {
         this._decrementWaiters();
         Ember.run(null, resolve, snapshot);
 
@@ -233,20 +213,15 @@ export default DS.Adapter.extend(Waitable, {
 
 
   /**
-   * Called by the store to retrieve the JSON for all of the records for a
-   * given type. The method will return a promise which will resolve when the
-   * value is successfully fetched from Wilddog.
-   *
-   * Additionally, from this point on, any records of this type that are added,
-   * removed or modified from Wilddog will automatically be reflected in the
-   * store.
+   * 查询所有
+   * 如果wilddog有数据的更新此方法会自动更新到应用
    */
   findAll(store, typeClass) {
     var ref = this._getCollectionRef(typeClass);
 
     var log = `DS: WildemberAdapter#findAll ${typeClass.modelName} to ${ref.toString()}`;
 
-    return this._fetchPagation(ref, log).then((snapshot) => {
+    return this._fetch(ref, log).then((snapshot) => {
       if (!this._findAllHasEventsForType(typeClass)) {
         this._findAllAddEventListeners(store, typeClass, ref);
       }
@@ -263,64 +238,140 @@ export default DS.Adapter.extend(Waitable, {
 
 
   query(store, typeClass, query, recordArray) {
-    var ref = this._getCollectionRef(typeClass);
-    var modelName = typeClass.modelName;
+        var ref = this._getCollectionRef(typeClass);
+        var modelName = typeClass.modelName;
 
-    ref = this.applyQueryToRef(ref, query);
+        ref = this.applyQueryToRef(ref, query, store.get("typeMaps"));
 
-    ref.on('child_added', Ember.run.bind(this, function (snapshot) {
-      var record = store.peekRecord(modelName, this._getKey(snapshot));
+        ref.on('child_added', Ember.run.bind(this, function (snapshot) {
+            var record = store.peekRecord(modelName, this._getKey(snapshot));
 
-      if (!record || !record.__listening) {
-        var payload = this._assignIdToPayload(snapshot);
-        var normalizedData = store.normalize(typeClass.modelName, payload);
-        this._updateRecordCacheForType(typeClass, payload, store);
-        record = store.push(normalizedData);
-      }
+            if (!record || !record.__listening) {
+                var payload = this._assignIdToPayload(snapshot);
+                var normalizedData = store.normalize(typeClass.modelName, payload);
+                this._updateRecordCacheForType(typeClass, payload, store);
+                // debugger;
+                record = store.push(normalizedData);
+            }
 
-      if (record) {
-        recordArray.get('content').addObject(record._internalModel);
-      }
-    }));
+            if (record) {
+                recordArray.get('content').addObject(record._internalModel);
+            }
+        }));
 
-    // `child_changed` is already handled by the record's
-    // value listener after a store.push. `child_moved` is
-    // a much less common case because it relates to priority
+        // `child_changed` is already handled by the record's
+        // value listener after a store.push. `child_moved` is
+        // a much less common case because it relates to priority
 
-    ref.on('child_removed', Ember.run.bind(this, function (snapshot) {
-      var record = store.peekRecord(modelName, this._getKey(snapshot));
-      if (record) {
-        recordArray.get('content').removeObject(record._internalModel);
-      }
-    }));
+        ref.on('child_removed', Ember.run.bind(this, function (snapshot) {
+          var record = store.peekRecord(modelName, this._getKey(snapshot));
+          if (record) {
+            recordArray.get('content').removeObject(record._internalModel);
+          }
+        }));
 
-    // clean up event handlers when the array is being destroyed
-    // so that future firebase events wont keep trying to use a
-    // destroyed store/serializer
-    recordArray.__firebaseCleanup = function () {
-      ref.off('child_added');
-      ref.off('child_removed');
-    };
+        // clean up event handlers when the array is being destroyed
+        // so that future wilddog events wont keep trying to use a
+        // destroyed store/serializer
+        recordArray.__firebaseCleanup = function () {
+          ref.off('child_added');
+          ref.off('child_removed');
+        };
 
-    var log = `DS: WildemberAdapter#query ${modelName} with ${query}`;
+        var log = `DS: WildemberAdapter#query ${modelName} with ${query}`;
+        // _fetch返回一个查询数据的promise
+        return this._fetch(ref, log).then((snapshot) => {
+          if (!this._findAllHasEventsForType(typeClass)) {
+            this._findAllAddEventListeners(store, typeClass, ref);
+          }
+          var results = [];
+          snapshot.forEach((childSnapshot) => {
+            var payload = this._assignIdToPayload(childSnapshot);
+            this._updateRecordCacheForType(typeClass, payload, store);
 
-    return this._fetch(ref, log).then((snapshot) => {
-      if (!this._findAllHasEventsForType(typeClass)) {
-        this._findAllAddEventListeners(store, typeClass, ref);
-      }
-      var results = [];
-      snapshot.forEach((childSnapshot) => {
-        var payload = this._assignIdToPayload(childSnapshot);
-        this._updateRecordCacheForType(typeClass, payload, store);
-        results.push(payload);
-      });
-      return results;
-    });
+            // 剔除id为空的数据
+            if (payload.id) {
+                results.push(payload);
+            }
+            // results.push(payload);
+          });
+          return results;
+        });
   },
 
+  /**
+   * 分页查询，目前支持滚动加载分页方式。如果想使用其他分页方式需要为每个model设置一个自增的属性，
+   * 根据自增属性分页，请参考：https://coding.net/u/wilddog/p/wilddog-gist-js/git/tree/master/src/pagination#user-content-wei-shu-ju-sheng-cheng-zi-zeng-zi-duan
+   * 由于wilddog的分页不好处理，详细请参考：https://coding.net/u/wilddog/p/wilddog-gist-js/git/tree/master/src/pagination
+   *
+   * @param store
+   * @param typeClass
+   * @param query 查询参数：{ orderBy: 'timestamp', limitToFirst: 11, startAt: 'startId', endAt: 'endId' }
+   * 更多可以设置的查询属性请看：https://docs.wilddog.com/api/sync/web/Query.html#orderByChild
+   */
+  queryPagination(store, typeClass, query, recordArray) {
+        var ref = this._getCollectionRef(typeClass);
+        var modelName = typeClass.modelName;
+        //调用有分页处理的方法
+        ref = this.applyQueryToRef(ref, query, true);
 
-  applyQueryToRef(ref, query) {
+        ref.on('child_added', Ember.run.bind(this, function (snapshot) {
+            var record = store.peekRecord(modelName, this._getKey(snapshot));
 
+            if (!record || !record.__listening) {
+                var payload = this._assignIdToPayload(snapshot);
+                var normalizedData = store.normalize(typeClass.modelName, payload);
+                this._updateRecordCacheForType(typeClass, payload, store);
+                // debugger;
+                record = store.push(normalizedData);
+            }
+
+            if (record) {
+                recordArray.get('content').addObject(record._internalModel);
+            }
+        }));
+
+        // `child_changed` is already handled by the record's
+        // value listener after a store.push. `child_moved` is
+        // a much less common case because it relates to priority
+
+        ref.on('child_removed', Ember.run.bind(this, function (snapshot) {
+          var record = store.peekRecord(modelName, this._getKey(snapshot));
+          if (record) {
+            recordArray.get('content').removeObject(record._internalModel);
+          }
+        }));
+
+        // clean up event handlers when the array is being destroyed
+        // so that future wilddog events wont keep trying to use a
+        // destroyed store/serializer
+        recordArray.__firebaseCleanup = function () {
+          ref.off('child_added');
+          ref.off('child_removed');
+        };
+
+        var log = `DS: WildemberAdapter#query ${modelName} with ${query}`;
+        // _fetch返回执行结果的promise
+        return this._fetch(ref, log).then((snapshot) => {
+          if (!this._findAllHasEventsForType(typeClass)) {
+            this._findAllAddEventListeners(store, typeClass, ref);
+          }
+          var results = [];
+          snapshot.forEach((childSnapshot) => {
+            var payload = this._assignIdToPayload(childSnapshot);
+            this._updateRecordCacheForType(typeClass, payload, store);
+            // 剔除id为空的数据
+            if (payload.id) {
+                results.push(payload);
+            }
+            // results.push(payload);
+          });
+          return results;
+        });
+  },
+
+  applyQueryToRef(ref, query, typeMaps) {
+    // 默认排序
     if (!query.orderBy) {
       query.orderBy = '_key';
     }
@@ -334,10 +385,24 @@ export default DS.Adapter.extend(Waitable, {
     } else {
       ref = ref.orderByChild(query.orderBy);
     }
-
+    // debugger;
     ['limitToFirst', 'limitToLast', 'startAt', 'endAt', 'equalTo'].forEach(function (key) {
+        // 非null
       if (query[key] || query[key] === '' || query[key] === false) {
-        ref = ref[key](query[key]);
+          // 分页
+          if (typeMaps && typeof(typeMaps.metadata) !== 'undefined' && typeMaps.metadata.isPagination) {
+              Ember.Logger.debug("Adapter.applyQueryToRef：分页处理。");
+              //查询数量加一，为何要这样做请看：https://coding.net/u/wilddog/p/wilddog-gist-js/git/tree/master/src/pagination#user-content-yi-kao-shang--ye-de-zui-hou--tiao-ji-lu-huo-qu-xia--ye-shu-ju
+              if (key === 'limitToFirst') {
+                  ref = ref.limitToFirst(parseInt(query[key])+1);
+              } else if (key === 'limitToLast') {
+                  ref = ref.limitToLast(parseInt(query[key])+1);
+              } else {
+                  ref = ref[key](query[key]);
+              }
+          } else {
+              ref = ref[key](query[key]); // ref[startAt]('3')  --> ref.startAt('3')
+          }
       }
     });
 
@@ -435,7 +500,7 @@ export default DS.Adapter.extend(Waitable, {
     var pathPieces = recordRef.path.toString().split('/');
     var lastPiece = pathPieces[pathPieces.length-1];
     var serializedRecord = snapshot.serialize({
-      includeId: (lastPiece !== snapshot.id) // record has no firebase `key` in path
+      includeId: (lastPiece !== snapshot.id) // record has no wilddog `key` in path
     });
     const serializer = store.serializerFor(typeClass.modelName);
 
@@ -640,7 +705,7 @@ export default DS.Adapter.extend(Waitable, {
 
 
   /**
-   * Save an embedded belongsTo record and set its internal firebase ref
+   * Save an embedded belongsTo record and set its internal wilddog ref
    *
    * @return {Promise<DS.Model>}
    */
@@ -850,7 +915,7 @@ export default DS.Adapter.extend(Waitable, {
 
 
   /**
-   * We don't need background reloading, because firebase!
+   * We don't need background reloading, because wilddog!
    */
   shouldBackgroundReloadRecord() {
     return false;

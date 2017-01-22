@@ -25,6 +25,9 @@ Router.map(function() {
     // :library_id是一个动态段，会根据实际的URL变化
     this.route('edit', { path: '/:library_id/edit' });
   });
+
+  this.route('pagination');
+  this.route('user');
 });
 
 export default Router;

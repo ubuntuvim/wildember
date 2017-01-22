@@ -1,7 +1,7 @@
 {
   "name": "wildember",
   "description": "一个方便、快捷连接野狗实时服务适配器。",
-  "version": "1.5.7",
+  "version": "1.6.0",
   "author": "ubuntuvim (https://github.com/ubuntuvim/)",
   "homepage": "https://wildember.ddlisting.com",
   "directories": {
@@ -89,6 +89,6 @@
     "sinon": "^1.17.3",
     "vinyl-buffer": "1.0.0",
     "vinyl-source-stream": "1.1.0",
-    "wilddog": "2.0.4"
+    "wilddog": "2.1.0"
   }
 }
