@@ -1,3 +1,5 @@
+// app/serializers/application.js
+
 import JSONSerializer from 'ember-data/serializers/json';
 
 /**
