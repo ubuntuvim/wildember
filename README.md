@@ -11,6 +11,9 @@ wildember是一个方便、快捷连接野狗实时服务适配器。
 所以找了国内一个类似的、服务也很棒的产品——野狗。野狗提供了丰富、人性化的API文档，以及强大的sdk，对于开发者来说是非常好的事情。
 也正是因为firebase无法访问所以我们为Ember.js的开发者提供了连接野狗的适配器wildemer。它的使用方式和firebase一模一样，因为WildEmber是直接fork Emberfire的。即使上不了firebase我们也一样可以享受到非常棒的实时服务。
 
+## 运行本项目
+
+如果你想直接运行本项目可以clone代码到自己本地，然后执行`npm install`和`bower install`安装项目依赖，安装完毕后执行[http://localhost:4200]可以查看效果。
 
 ## 安装wildember
 
