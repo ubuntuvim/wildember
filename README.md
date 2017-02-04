@@ -30,7 +30,7 @@ count | 查询节点的个数
 
 ![野狗查询，大数据量报错](http://emberteach.ddlisting.com/content/images/2017/02/4.png)
 
-看到这个错误，说明你查询的节点数据量太大，无法查询出来需要使用`findAllPagination`方法。
+图片不显示请点击[查看图片](http://emberteach.ddlisting.com/content/images/2017/02/4.png)，看到这个错误，说明你查询的节点数据量太大，无法查询出来需要使用`findAllPagination`方法。
 
 除了方法`findAllPagination`和`count`方法之外的所有方法都可以从emberjs官网找到解释以及示例，网址如下：
 
