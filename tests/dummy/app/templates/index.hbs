@@ -1,28 +1,8 @@
-{{! app/templates/index.hbs}}
-
-<div class="jumbotron text-center">
-    <h1>WildEmber测试demo</h1>
-
-    <br/><br/>
-
-    <p>请输入邮箱地址，邀请你的好友一起体验（<small>其实~并没实现邮箱发送功能</small>）。</p>
-
-    <div class="form-horizontal form-group form-group-lg row">
-        <div class="col-xs-10 col-xs-offset-1 col-sm-6 col-sm-offset-1 col-md-5 col-md-offset-2">
-          <!-- <input type="email" class="form-control" placeholder="Please type your e-mail address." autofocus="autofocus"/> -->
-          {{input type="email" value=emailAddress class="form-control" placeholder="请输入正确的邮箱地址" autofocus="autofocus"}}
+{{! app/template/notebook/index.hbs �ʼǱ���ҳ}}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12 col-sm-12">
+            <img src="http://img.ape-note.com/1.png" alt="" class="img-responsive" />
         </div>
-        <div class="col-xs-10 col-xs-offset-1 col-sm-offset-0 col-sm-4 col-md-3">
-            <button class="btn btn-primary btn-lg btn-block" disabled={{isDisabled}} {{action 'saveInvitation'}}>邀请</button>
-        </div>
-
     </div>
-
-    {{! 显示提示信息}}
-    {{#if responseMessage}}
-     <div class="alert alert-success">{{responseMessage}}</div>
-   {{/if}}
-
-
-   <br/><br/>
 </div>

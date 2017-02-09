@@ -12,13 +12,23 @@
     <link rel="stylesheet" href="assets/vendor.css">
     <link rel="stylesheet" href="assets/dummy.css">
 
+	  <!-- 自定义外部样式 -->
+    <link rel="stylesheet" href="//at.alicdn.com/t/font_uhubpjzed5z5mi.css" charset="utf-8">
+
+
     {{content-for "head-footer"}}
   </head>
   <body>
     {{content-for "body"}}
 
 
-    <script src = "https://cdn.wilddog.com/sdk/js/2.0.0/wilddog.js"></script>
+	<script src="/assets/editormd/lib/zepto.min.js"></script>
+    <script src="/assets/editormd/lib/codemirror/codemirror.min.js"></script>
+    <script src="/assets/editormd/editormd.js"></script>
+
+
+    <script src="https://cdn.wilddog.com/sdk/js/2.4.3/wilddog.js"></script>
+
 
     <script src="assets/vendor.js"></script>
     <script src="assets/dummy.js"></script>
