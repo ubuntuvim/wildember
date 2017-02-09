@@ -250,7 +250,7 @@ export default DS.Adapter.extend(Waitable, {
                 var payload = this._assignIdToPayload(snapshot);
                 var normalizedData = store.normalize(typeClass.modelName, payload);
                 this._updateRecordCacheForType(typeClass, payload, store);
-                // debugger;
+
                 record = store.push(normalizedData);
             }
 
@@ -315,7 +315,7 @@ export default DS.Adapter.extend(Waitable, {
     } else {
       ref = ref.orderByChild(query.orderBy);
     }
-    // debugger;
+    
     ['limitToFirst', 'limitToLast', 'startAt', 'endAt', 'equalTo'].forEach(function (key) {
         // 非null
       if (query[key] || query[key] === '' || query[key] === false) {
@@ -433,7 +433,7 @@ export default DS.Adapter.extend(Waitable, {
       includeId: (lastPiece !== snapshot.id) // record has no wilddog `key` in path
     });
     const serializer = store.serializerFor(typeClass.modelName);
-    debugger;
+
     return new Promise((resolve, reject) => {
       var relationshipsToSave = [];
       // first we remove all relationships data from the serialized record, we backup the
@@ -694,7 +694,7 @@ export default DS.Adapter.extend(Waitable, {
     }
 
     var embeddingParent = this.getFirstEmbeddingParent(record);
-debugger;
+
     if (embeddingParent) {
       var { record: parent, relationship } = embeddingParent;
       const embeddedKey = parent.store.serializerFor(parent.modelName).keyForRelationship(relationship.key);
