@@ -9,34 +9,59 @@ import assign from 'lodash/object/assign';
 export default DS.JSONSerializer.extend(DS.EmbeddedRecordsMixin, {
   isNewSerializerAPI: true,
 
-
   /**
-   * Firebase does not send null values, it omits the key altogether. This nullifies omitted
-   * properties so that property deletions sync correctly.
+   * Firebase have a special value for a date 'firebase.database.ServerValue.TIMESTAMP'
+   * that tells it to insert server time. We need to make sure the value is not scrapped
+   * by the data attribute transforms.
    *
    * @override
    */
-  extractAttributes(modelClass, resourceHash) {
-    var attributes = this._super(modelClass, resourceHash);
+  // serializeAttribute(snapshot, json, key, attribute) {
+  //   var value = snapshot.attr(key);
+  //   this._super(snapshot, json, key, attribute);
+  //   if (this._canSerialize(key)) {
+  //   //   if (value === firebase.database.ServerValue.TIMESTAMP) {
+  //
+  //       var payloadKey = this._getMappedKey(key, snapshot.type);
+  //
+  //       if (payloadKey === key && this.keyForAttribute) {
+  //         payloadKey = this.keyForAttribute(key, 'serialize');
+  //       }
+  //       // do not transform
+  //       json[payloadKey] = value;
+  //   //   }
+  //   }
+  // },
 
-    // nullify omitted attributes
-    modelClass.eachAttribute((key) => {
-      if (!attributes.hasOwnProperty(key)) {
-        attributes[key] = null;
-      }
-    });
 
-    return attributes;
-  },
+    /**
+     * Firebase does not send null values, it omits the key altogether. This nullifies omitted
+     * properties so that property deletions sync correctly.
+     *
+     * @override
+     */
+    extractAttributes(modelClass, resourceHash) {
+      var attributes = this._super(modelClass, resourceHash);
+
+      // nullify omitted attributes
+      modelClass.eachAttribute((key) => {
+        if (!attributes.hasOwnProperty(key)) {
+          attributes[key] = null;
+        }
+      });
+
+      return attributes;
+    },
 
 
-  /**
-   * @override
-   */
-  extractRelationships(modelClass, payload) {
-    this.normalizeRelationships(modelClass, payload);
-    return this._super(modelClass, payload);
-  },
+    /**
+     * @override
+     */
+    extractRelationships(modelClass, payload) {
+      this.normalizeRelationships(modelClass, payload);
+      return this._super(modelClass, payload);
+    },
+
 
 
   /**
@@ -91,6 +116,7 @@ export default DS.JSONSerializer.extend(DS.EmbeddedRecordsMixin, {
    * ```
    */
   normalizeRelationships(modelClass, payload) {
+
     modelClass.eachRelationship((key, meta) => {
       let relationshipKey = this.keyForRelationship(key, meta.kind, 'deserialize');
 
@@ -108,10 +134,7 @@ export default DS.JSONSerializer.extend(DS.EmbeddedRecordsMixin, {
             } else {
               throw new Error(`${modelClass.toString()} relationship ${meta.kind}('${meta.type}') must contain embedded records with an \`id\`. Example: { "${key}": { "${meta.type}_1": { "id": "${meta.type}_1" } } } instead got: ${JSON.stringify(payload[key])}`);
             }
-          }
-
-          // normalized
-          else {
+        } else {// normalized  ==>hasDeserializeRecordsOption
             if (typeof relationshipPayload === 'object' && !Ember.isArray(relationshipPayload)) {
               relationshipPayload = Object.keys(relationshipPayload);
             } else if (Ember.isArray(relationshipPayload)) {
@@ -122,13 +145,11 @@ export default DS.JSONSerializer.extend(DS.EmbeddedRecordsMixin, {
           }
 
           payload[relationshipKey] = relationshipPayload;
-        }
-
-        // hasMany property is not present
-        // server will not send a property which has no content
-        // (i.e. it will never send `comments: null`) so we need to
-        // force the empty relationship
-        else {
+      } else {  //hasOwnProperty
+            // hasMany property is not present
+            // server will not send a property which has no content
+            // (i.e. it will never send `comments: null`) so we need to
+            // force the empty relationship
           payload[relationshipKey] = [];
         }
       }
@@ -146,18 +167,19 @@ export default DS.JSONSerializer.extend(DS.EmbeddedRecordsMixin, {
     // a defined option object for a resource is treated the same as
     // `deserialize: 'records'`
     hasDeserializeRecordsOption(attrs, attr) {
-        var alwaysEmbed = hasEmbeddedAlwaysOption(attrs, attr);
-        var option = attrsOption(attrs, attr);
+
+        var alwaysEmbed = this.hasEmbeddedAlwaysOption(attrs, attr);
+        var option = this.attrsOption(attrs, attr);
         var hasSerializingOption = option && (option.deserialize || option.serialize);
         return alwaysEmbed || hasSerializingOption /* option.deserialize === 'records' */;
     },
     // checks config for attrs option to embedded (always) - serialize and deserialize
     hasEmbeddedAlwaysOption(attrs, attr) {
-        var option = attrsOption(attrs, attr);
+        var option = this.attrsOption(attrs, attr);
         return option && option.embedded === 'always';
     },
     attrsOption(attrs, attr) {
-        return attrs && (attrs[Ember.String.camelize(attr)] || attrs[attr]);
+        return attrs && attr && (attrs[Ember.String.camelize(attr)] || attrs[attr]);
     },
 
   /**

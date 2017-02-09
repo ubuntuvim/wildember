@@ -51,7 +51,7 @@ export default DS.Adapter.extend(Waitable, {
   /**
    * 初始化，并获取野狗的连接
    */
-  init(application) {
+  init(/*application*/) {
     this._super.apply(this, arguments);
     // wilddogConfig会在子类中被赋值
     let wilddogConfig = this.get('wilddogConfig');
@@ -433,27 +433,27 @@ export default DS.Adapter.extend(Waitable, {
       includeId: (lastPiece !== snapshot.id) // record has no wilddog `key` in path
     });
     const serializer = store.serializerFor(typeClass.modelName);
-
+    debugger;
     return new Promise((resolve, reject) => {
       var relationshipsToSave = [];
       // first we remove all relationships data from the serialized record, we backup the
       // removed data so that we can save it at a later stage.
       snapshot.record.eachRelationship((key, relationship) => {
-      const relationshipKey = serializer.keyForRelationship(key);
-      const data = serializedRecord[relationshipKey];
-      const isEmbedded = this.isRelationshipEmbedded(store, typeClass.modelName, relationship);
-      const hasMany = relationship.kind === 'hasMany';
-      if (hasMany || isEmbedded) {
-          if (!Ember.isNone(data)) {
-            relationshipsToSave.push({
-              data:data,
-              relationship:relationship,
-              isEmbedded:isEmbedded,
-              hasMany:hasMany
-            });
+          const relationshipKey = serializer.keyForRelationship(key);
+          const data = serializedRecord[relationshipKey];
+          const isEmbedded = this.isRelationshipEmbedded(store, typeClass.modelName, relationship);
+          const hasMany = relationship.kind === 'hasMany';
+          if (hasMany || isEmbedded) {
+              if (!Ember.isNone(data)) {
+                relationshipsToSave.push({
+                  data:data,
+                  relationship:relationship,
+                  isEmbedded:isEmbedded,
+                  hasMany:hasMany
+                });
+              }
+              delete serializedRecord[relationshipKey];
           }
-          delete serializedRecord[relationshipKey];
-        }
       });
       var reportError = (errors) => {
         var error = new Error(`Some errors were encountered while saving ${typeClass} ${snapshot.id}`);
@@ -694,7 +694,7 @@ export default DS.Adapter.extend(Waitable, {
     }
 
     var embeddingParent = this.getFirstEmbeddingParent(record);
-
+debugger;
     if (embeddingParent) {
       var { record: parent, relationship } = embeddingParent;
       const embeddedKey = parent.store.serializerFor(parent.modelName).keyForRelationship(relationship.key);

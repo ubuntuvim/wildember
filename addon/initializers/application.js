@@ -5,7 +5,13 @@ import WildemberAdapter from '../adapters/wildember';
 import WildemberSerializer from '../serializers/wildember';
 import forEach from 'lodash/collection/forEach';
 
-export function initialize(application) {
+export function initialize(/*application*/) {
+
+
+    let application = arguments[1] || arguments[0];
+    // 千万千万别忘记注册，否则在application中不起作用
+    application.register('adapter:-wildember', WildemberAdapter);
+    application.register('serializer:-wildember', WildemberSerializer);
 
   // Monkeypatch the store until ED gives us a good way to listen to push events
   if (!DS.Store.prototype._emberfirePatched) {
