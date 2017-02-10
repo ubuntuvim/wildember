@@ -17,74 +17,17 @@ wildember与emberjs的store提供了一致的API，其中最常用、最主要�
 
 API | 说明
 ----|------
-findAll | 查询节点所有数据（数据量小的情况使用）  
+findAll | 查询节点所有数据  
 peekAll | 从缓存中查询节点所有数据
-findAllPagination | 查询节点所有数据（数据量大的情况使用）
 query | 根据给定条件查询
 findRecord | 根据id查询一条记录
 peekRecord | 根据id从缓存中查询一条记录
 createRecord | 创建一条记录
-count | 查询节点的个数
 
-**注意**：如何区分什么时候使用`findAll`和`findAllPagination`呢？很简单，当你调用`findAll`时浏览器控制台报如下错误的时候说明数据量太大，无法使用`findAll`查询所有数据。
-
-![野狗查询，大数据量报错](http://emberteach.ddlisting.com/content/images/2017/02/4.png)
-
-图片不显示请点击[查看图片](http://emberteach.ddlisting.com/content/images/2017/02/4.png)，看到这个错误，说明你查询的节点数据量太大，无法查询出来需要使用`findAllPagination`方法。
-
-除了方法`findAllPagination`和`count`方法之外的所有方法都可以从emberjs官网找到解释以及示例，网址如下：
+**详细API解释请看下面的网址**
 
 1. [findAll、peekAll、query、findRecord、peekRecord](https://guides.emberjs.com/v2.11.0/models/finding-records/)
 2. [createRecord、deleteRecord](https://guides.emberjs.com/v2.11.0/models/creating-updating-and-deleting-records/)
-
-对于方法`findAllPagination`和`count`方法是wildember为了适配野狗而特有的，它们的使用方法请参考下面的代码：
-
-```js
-import Ember from 'ember';
-
-export default Ember.Route.extend({
-    model() {
-        return Ember.RSVP.hash({
-            todos: this.store.findAllPagination(this.store, 'todo-item'),
-            // 查询数量
-            count: this.store.count(this.store, 'todo-item')
-        });
-    }
-});
-```
-
-```html
-{{! app/templates/pagination.hbs }}
-todos count:{{model.count}}<br><br>
-todos len :{{model.todos.length}}<br><br>
-
-<table class="table">
-  <thead>
-    <tr>
-      <th>#</th>
-      <th>First Name</th>
-      <th>Last Name</th>
-      <th>Username</th>
-    </tr>
-  </thead>
-  <tbody>
-      {{#each model.todos as |item index|}}
-      {{!debugger}}
-    <tr>
-      <td>{{index}}</td>
-      <td>{{item.id}}</td>
-      <td>{{item.timestamp}}</td>
-      <td>{{item.title}}</td>
-    </tr>
-    {{/each}}
-  </tbody>
-</table>
-
-<br>
-<br>
-<br>
-```
-这两个方法的使用方式也是非常简单的，看例子就可以明白，预览效果请看[http://localhost:4200/#/pagination](http://localhost:4200/#/pagination)或者[http://wildember.ddlisting.com/#/pagination](http://wildember.ddlisting.com/#/pagination)。
 
 ## 运行本项目
 

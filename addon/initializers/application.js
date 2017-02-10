@@ -24,64 +24,67 @@ export function initialize(/*application*/) {
        * 只能通过分页方式查询。
        * 野狗数据限制说明：https://docs.wilddog.com/guide/sync/data-limit.html
        */
-      findAllPagination(store, typeClass, startPosition) {
-        var typeClassTmp = typeClass;
-        var adapter = store.adapterFor(typeClass);
-        // var ref = adapter._getCollectionRef(typeClass);
-        var ref = adapter._ref;
-        //转换model名，通常转为复数形式
-        typeClass = adapter.pathForType(typeClass);
-        // store.modelFor(typeClass);
-        //查询当前model下的数据
-        ref = ref.ref(typeClass);
-        var COUNT = 100;
-        var totalResults = [];
-        var queryFlag = true;
-        var query = {
-            startAt: startPosition, //this.get("startAt"),
-            orderByChild: 'timestamp',
-            limitToFirst: COUNT //每页显示的条数
-          }
-          // store.set('typeMaps.metadata', { 'isPagination':true } );
-        var typeMaps = {
-          metadata: {
-            isPagination: false
-          }
-        }
-        ref = adapter.applyQueryToRef(ref, query, typeMaps);
-        var log = `DS: WildemberAdapter#findAll ${typeClass} to ${ref}`;
-        return adapter._fetch(ref, log).then((snapshot) => {
-          var results = [];
-          snapshot.forEach((childSnapshot) => {
-            var payload = adapter._assignIdToPayload(childSnapshot);
-            results.push(payload);
-          });
-          /*
-              每次获取100条记录，取最后一条作为下一页的开始，然后再查询下一页的数据，
-              只要下一页还有超过2条数据就继续分页查询，
-              直至查询完当前节点的所有数据。
-           */
-          var len = results.length;
-          if (len < COUNT) { //最有一页不足100条，不需要再继续分页查询
-            return results;
-          } else {
-            //最后一个元素
-            var startPosition = results[len - 1].id; //
-            return this.findAllPagination(store, typeClass, startPosition).then((list) => {
-                var len = results.length-1;  //  len - 1目的是为了让后一页的第一条数据覆盖掉前一页的最后一条数据
-                // 把后面的数据拼接上去，
-                list.forEach((item) => {
-                    //后一页的第一个数据会覆盖到上一页的最后一个数据，完美解决了因为多获取一条数据导致重复的问题
-                    //https://coding.net/u/wilddog/p/wilddog-gist-js/git/tree/master/src/pagination#user-content-yi-kao-shang--ye-de-zui-hou--tiao-ji-lu-huo-qu-xia--ye-shu-ju
-                    results[len++]=item;
-                });
-                return results;
-            });
-          }
-        }).catch(function(err) {
-          console.error('operation is failed ', err);
-        }); //_fetch
-      },
+    //   findAllPagination(store, typeClass, startPosition) {
+    //     var typeClassTmp = typeClass;
+    //     var adapter = store.adapterFor(typeClass);
+    //     // var ref = adapter._getCollectionRef(typeClass);
+    //     var ref = adapter._ref;
+    //     //转换model名，通常转为复数形式
+    //     typeClass = adapter.pathForType(typeClass);
+    //     // store.modelFor(typeClass);
+    //     //查询当前model下的数据
+    //     ref = ref.ref(typeClass);
+    //     var COUNT = 100;
+    //     var totalResults = [];
+    //     var queryFlag = true;
+    //     var query = {
+    //         startAt: startPosition, //this.get("startAt"),
+    //         orderByChild: 'timestamp',
+    //         limitToFirst: COUNT //每页显示的条数
+    //       }
+    //       // store.set('typeMaps.metadata', { 'isPagination':true } );
+    //     var typeMaps = {
+    //       metadata: {
+    //         isPagination: false
+    //       }
+    //     }
+    //     ref = adapter.applyQueryToRef(ref, query, typeMaps);
+    //     var log = `DS: WildemberAdapter#findAll ${typeClass} to ${ref}`;
+    //     return adapter._fetch(ref, log).then((snapshot) => {
+    //       var results = [];
+    //       snapshot.forEach((childSnapshot) => {
+    //         var payload = adapter._assignIdToPayload(childSnapshot);
+    //         // results.push(Ember.Object.create(payload));
+    //         results.push(payload);
+    //       });
+    //       /*
+    //           每次获取100条记录，取最后一条作为下一页的开始，然后再查询下一页的数据，
+    //           只要下一页还有超过2条数据就继续分页查询，
+    //           直至查询完当前节点的所有数据。
+    //        */
+    //       var len = results.length;
+    //       if (len < COUNT) { //最有一页不足100条，不需要再继续分页查询
+    //         return results;
+    //       } else {
+    //         //最后一个元素
+    //         var startPosition = results[len - 1].id; //
+    //         return this.findAllPagination(store, typeClass, startPosition).then((list) => {
+    //             var len = results.length-1;  //  len - 1目的是为了让后一页的第一条数据覆盖掉前一页的最后一条数据
+    //             // 把后面的数据拼接上去，
+    //             list.forEach((item) => {
+    //                 //后一页的第一个数据会覆盖到上一页的最后一个数据，完美解决了因为多获取一条数据导致重复的问题
+    //                 //https://coding.net/u/wilddog/p/wilddog-gist-js/git/tree/master/src/pagination#user-content-yi-kao-shang--ye-de-zui-hou--tiao-ji-lu-huo-qu-xia--ye-shu-ju
+    //                 // results[len++] = Ember.Object.create(item);
+    //                 results[len++] = item;
+    //             });
+    //             return results;
+    //         });
+    //       }
+    //     }).catch(function(err) {
+    //       console.error('operation is failed ', err);
+    //     }); //_fetch
+    //     // debugger;
+    //   },
 
 
       /**

@@ -214,27 +214,66 @@ export default DS.Adapter.extend(Waitable, {
 
   /**
    * 查询所有
-   * 如果wilddog有数据的更新此方法会自动更新到应用
+   * 由于wilddog限制了每次查询的最大数量，特此在内部实现自动分页查询，然后把分页查询到的数组放到一个集合中返回
    */
-  findAll(store, typeClass) {
-    var ref = this._getCollectionRef(typeClass);
+    findAll(store, typeClass, startPosition) {
 
-    var log = `DS: WildemberAdapter#findAll ${typeClass.modelName} to ${ref.toString()}`;
+        var COUNT = 100;
+        var ref = this._getCollectionRef(typeClass);
 
-    return this._fetch(ref, log).then((snapshot) => {
-      if (!this._findAllHasEventsForType(typeClass)) {
-        this._findAllAddEventListeners(store, typeClass, ref);
-      }
-      var results = [];
-      snapshot.forEach((childSnapshot) => {
-        var payload = this._assignIdToPayload(childSnapshot);
-        this._updateRecordCacheForType(typeClass, payload, store);
-        results.push(payload);
-      });
+        //设置查询参数
+        var query = {
+            startAt: startPosition, //this.get("startAt"),
+            orderByChild: 'timestamp',
+            limitToFirst: COUNT //每页显示的条数
+        };
+          // store.set('typeMaps.metadata', { 'isPagination':true } );
+        var typeMaps = {
+            metadata: {
+                isPagination: false
+            }
+        };
+        ref = this.applyQueryToRef(ref, query, typeMaps);
 
-      return results;
-    });
-  },
+        var log = `DS: WildemberAdapter#findAll ${typeClass.modelName} to ${ref.toString()}`;
+        // 执行查询
+        return this._fetch(ref, log).then((snapshot) => {
+            if (!this._findAllHasEventsForType(typeClass)) {
+                this._findAllAddEventListeners(store, typeClass, ref);
+            }
+            var results = [];
+            snapshot.forEach((childSnapshot) => {
+                var payload = this._assignIdToPayload(childSnapshot);
+                this._updateRecordCacheForType(typeClass, payload, store);
+                results.push(payload);
+            });
+
+            /*
+              每次获取100条记录，取最后一条作为下一页的开始，然后再查询下一页的数据，
+              只要下一页还有超过2条数据就继续分页查询，
+              直至查询完当前节点的所有数据。
+            */
+            var len = results.length;
+            if (len < COUNT) { //最有一页不足100条，不需要再继续分页查询
+                return results;
+            } else {
+                //最后一个元素
+                var startPosition = results[len - 1].id; //
+                // 递归查询下一页
+                return this.findAll(store, typeClass, startPosition).then((list) => {
+                    var len = results.length-1;  //  len - 1目的是为了让后一页的第一条数据覆盖掉前一页的最后一条数据
+                    // 把后面的数据拼接上去，
+                    list.forEach((item) => {
+                        //后一页的第一个数据会覆盖到上一页的最后一个数据，完美解决了因为多获取一条数据导致重复的问题
+                        //https://coding.net/u/wilddog/p/wilddog-gist-js/git/tree/master/src/pagination#user-content-yi-kao-shang--ye-de-zui-hou--tiao-ji-lu-huo-qu-xia--ye-shu-ju
+                        // results[len++] = Ember.Object.create(item);
+                        results[len++] = item;
+                    });
+                    return results;
+                });
+            }  // if else
+        });  //_fetch
+    },
 
 
   query(store, typeClass, query, recordArray) {
@@ -315,7 +354,7 @@ export default DS.Adapter.extend(Waitable, {
     } else {
       ref = ref.orderByChild(query.orderBy);
     }
-    
+
     ['limitToFirst', 'limitToLast', 'startAt', 'endAt', 'equalTo'].forEach(function (key) {
         // 非null
       if (query[key] || query[key] === '' || query[key] === false) {
