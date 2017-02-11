@@ -46,7 +46,9 @@ export default DS.Adapter.extend(Waitable, {
   defaultSerializer: '-wildember',
   // 连接野狗配置信息
   wilddogConfig: null,
-
+  //  https://docs.wilddog.com/guide/sync/data-limit.html
+  // wilddog查询最大节点数，默认读取2000个，可以在子类设置
+  MAX_QUERY_COUNT: 2000,
 
   /**
    * 初始化，并获取野狗的连接
@@ -218,14 +220,13 @@ export default DS.Adapter.extend(Waitable, {
    */
     findAll(store, typeClass, startPosition) {
 
-        var COUNT = 100;
         var ref = this._getCollectionRef(typeClass);
 
         //设置查询参数
         var query = {
             startAt: startPosition, //this.get("startAt"),
             orderByChild: 'timestamp',
-            limitToFirst: COUNT //每页显示的条数
+            limitToFirst: this.get('MAX_QUERY_COUNT') //每页显示的条数
         };
           // store.set('typeMaps.metadata', { 'isPagination':true } );
         var typeMaps = {
@@ -254,7 +255,7 @@ export default DS.Adapter.extend(Waitable, {
               直至查询完当前节点的所有数据。
             */
             var len = results.length;
-            if (len < COUNT) { //最有一页不足100条，不需要再继续分页查询
+            if (len < this.get('MAX_QUERY_COUNT')) { //最有一页不足100条，不需要再继续分页查询
                 return results;
             } else {
                 //最后一个元素
@@ -264,6 +265,9 @@ export default DS.Adapter.extend(Waitable, {
                     var len = results.length-1;  //  len - 1目的是为了让后一页的第一条数据覆盖掉前一页的最后一条数据
                     // 把后面的数据拼接上去，
                     list.forEach((item) => {
+                        // var payload = this._assignIdToPayload(item);
+                        // this._updateRecordCacheForType(typeClass, payload, store);
+                        // results.push(payload);
                         //后一页的第一个数据会覆盖到上一页的最后一个数据，完美解决了因为多获取一条数据导致重复的问题
                         //https://coding.net/u/wilddog/p/wilddog-gist-js/git/tree/master/src/pagination#user-content-yi-kao-shang--ye-de-zui-hou--tiao-ji-lu-huo-qu-xia--ye-shu-ju
                         // results[len++] = Ember.Object.create(item);
