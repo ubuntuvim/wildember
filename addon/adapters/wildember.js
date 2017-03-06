@@ -557,7 +557,7 @@ export default DS.Adapter.extend(Waitable, {
 
     // Added
     var addedRecords = filter(ids, (id) => {
-      return !idsCache.contains(id);
+      return !idsCache.includes(id);
     });
 
     // Dirty
